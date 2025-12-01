@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  node-exporter.json: |
+    {
+      "dashboard": {
+        "title": "Node Exporter Full",
+        "tags": ["node", "exporter", "prometheus"],
+        "timezone": "browser",
+        "panels": [],
+        "schemaVersion": 27,
+        "version": 0,
+        "links": [],
+        "refresh": "30s"
+      }
+    }
+

@@ -1,0 +1,13 @@
+{
+  "dashboard": {
+    "title": "Node Exporter Full",
+    "tags": ["node", "exporter", "prometheus"],
+    "timezone": "browser",
+    "panels": [],
+    "schemaVersion": 27,
+    "version": 0,
+    "links": [],
+    "refresh": "30s"
+  }
+}
+

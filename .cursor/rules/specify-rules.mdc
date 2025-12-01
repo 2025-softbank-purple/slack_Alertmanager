@@ -1,0 +1,29 @@
+# promethus-example Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2025-12-01
+
+## Active Technologies
+
+- Go 1.21+ (Kubernetes 클라이언트 라이브러리 및 Controller 구현) (001-k8s-auto-monitoring)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+# Add commands for Go 1.21+ (Kubernetes 클라이언트 라이브러리 및 Controller 구현)
+
+## Code Style
+
+Go 1.21+ (Kubernetes 클라이언트 라이브러리 및 Controller 구현): Follow standard conventions
+
+## Recent Changes
+
+- 001-k8s-auto-monitoring: Added Go 1.21+ (Kubernetes 클라이언트 라이브러리 및 Controller 구현)
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

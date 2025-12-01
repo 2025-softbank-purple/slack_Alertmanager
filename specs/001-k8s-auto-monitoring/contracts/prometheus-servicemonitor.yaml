@@ -1,0 +1,28 @@
+# ServiceMonitor Contract for node-exporter
+# This defines the schema for ServiceMonitor resources created by the controller
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: node-exporter-{NODE_NAME}
+  namespace: monitoring
+  labels:
+    app: node-exporter
+    node: {NODE_NAME}
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+      node: {NODE_NAME}
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+      scheme: http
+
+# Contract Details:
+# - {NODE_NAME} is replaced with actual node name
+# - namespace must match Prometheus Operator namespace
+# - selector must match node-exporter Service labels
+# - endpoints define Prometheus scraping configuration
+

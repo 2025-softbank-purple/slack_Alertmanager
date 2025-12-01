@@ -1,0 +1,36 @@
+# Prometheus Operator Helm Chart Values
+# Based on kube-prometheus-stack chart
+
+prometheus:
+  enabled: true
+  prometheusSpec:
+    retention: 15d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    replicas: 1
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
+
+grafana:
+  enabled: false  # We install Grafana separately
+
+prometheusOperator:
+  enabled: true
+
+nodeExporter:
+  enabled: false  # We manage node-exporter separately via DaemonSet
+
