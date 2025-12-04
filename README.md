@@ -1,118 +1,70 @@
-# Kubernetes ìë™ ëª¨ë‹ˆí„°ë§ ì‹œìŠ¤í…œ
+# Kubernetes ¸ğ´ÏÅÍ¸µ + Slack Alertmanager
 
-ë¡œì»¬ Kubernetes í´ëŸ¬ìŠ¤í„°ì— Prometheus, Grafana, Alertmanagerë¥¼ ìë™ìœ¼ë¡œ ë°°í¬í•˜ê³ , ìƒˆ ë…¸ë“œê°€ ì¶”ê°€ë  ë•Œ ìë™ìœ¼ë¡œ ëª¨ë‹ˆí„°ë§ì— ì—°ê²°í•˜ëŠ” ì‹œìŠ¤í…œì…ë‹ˆë‹¤.
+Prometheus Operator(kube-prometheus-stack)¿Í Alertmanager¸¦ ¹èÆ÷ÇØ ³ëµå ¸ŞÆ®¸¯À» ¼öÁıÇÏ°í, Slack À¥ÈÅÀ¸·Î ¾Ë¸²À» º¸³»´Â ¿¹Á¦ÀÔ´Ï´Ù. node-exporter·Î ³ëµå »óÅÂ¸¦ ¼öÁıÇÏ¸ç, ¾Ë¸²Àº Secret·Î ÁÖÀÔÇÑ Slack À¥ÈÅ URLÀ» »ç¿ëÇÕ´Ï´Ù.
 
-## ì£¼ìš” íŠ¹ì§•
+## ±¸¼º
+- Helm °ª ÆÄÀÏ: `charts/prometheus-stack/values.yaml` (Alertmanager Slack ¼³Á¤ Æ÷ÇÔ)
+- °æº¸ ±ÔÄ¢ ¹× ServiceMonitor: `configs/prometheus/`
+- node-exporter DaemonSet/Service: `configs/node-exporter/`
+- ¼³Ä¡/Á¦°Å ½ºÅ©¸³Æ®: `scripts/`
+- ¸í¼¼/Å×½ºÆ® ¹®¼­: `specs/`, `tests/`
 
-- **ìë™ ì„¤ì¹˜**: ë‹¨ì¼ ëª…ë ¹ìœ¼ë¡œ Prometheus, Grafana, Alertmanager ë°°í¬
-- **ìë™ ë…¸ë“œ ê°ì§€**: DaemonSetì„ ì‚¬ìš©í•˜ì—¬ ëª¨ë“  ë…¸ë“œ(ê¸°ì¡´ ë° ìƒˆ ë…¸ë“œ)ì— ìë™ìœ¼ë¡œ node-exporter ë°°í¬
-- **ìë™ ëª¨ë‹ˆí„°ë§ ì—°ê²°**: ServiceMonitorë¥¼ í†µí•´ Prometheusê°€ ëª¨ë“  node-exporterë¥¼ ìë™ìœ¼ë¡œ ê°ì§€ ë° ìŠ¤í¬ë©
-- **ê¸°ë³¸ ëŒ€ì‹œë³´ë“œ**: Kubernetes/Prometheus í‘œì¤€ ëŒ€ì‹œë³´ë“œ ìë™ ì„¤ì¹˜
-- **ê¸°ë³¸ ì•Œë¦¼ ê·œì¹™**: ë…¸ë“œ ë‹¤ìš´, ë†’ì€ CPU/ë©”ëª¨ë¦¬ ì‚¬ìš©ë¥  ë“± ê¸°ë³¸ ì•Œë¦¼ ê·œì¹™ ì œê³µ
+## Alertmanager ¡æ Slack Æ÷¸Ë
+- Slack À¥ÈÅ URL: Secret `slack-webhook`ÀÇ Å° `api_url`
+- Alertmanager°¡ `/etc/alertmanager/secrets/slack-webhook/api_url`¿¡¼­ URLÀ» ÀĞÀ½
+- Á¦¸ñ: `[STATUS] alertname (severity)`
+- º»¹®:
+  - `*Where*: ns=<namespace>, pod=<pod>, instance=<instance>`
+  - `*What*: <summary>`
+  - `*Detail*: <description>` (ÁÖ¼®ÀÌ ÀÖÀ» ¶§¸¸)
 
-## ì•„í‚¤í…ì²˜
+## ¼±Çà Á¶°Ç
+- Docker Desktop ½ÇÇà Áß(WSL2 ¿£Áø ±ÇÀå)
+- kind ¼³Ä¡ ¹× PATH µî·Ï (`kind --version` µ¿ÀÛ)
+- kubectl, Helm v3 ¼³Ä¡
 
-ì´ ì‹œìŠ¤í…œì€ **Go Controller ì—†ì´** Kubernetesì˜ ë„¤ì´í‹°ë¸Œ ê¸°ëŠ¥ë§Œ ì‚¬ìš©í•©ë‹ˆë‹¤:
+## ·ÎÄÃ ½ÇÇà(Windows PowerShell)
+```powershell
+# 1) kind Å¬·¯½ºÅÍ »ı¼º
+kind create cluster --config kind-multi-node.yaml
 
-1. **DaemonSet**: node-exporterë¥¼ ëª¨ë“  ë…¸ë“œì— ìë™ ë°°í¬
-   - ìƒˆ ë…¸ë“œ ì¶”ê°€ ì‹œ ìë™ìœ¼ë¡œ Pod ìƒì„±
-   - ë…¸ë“œ ì œê±° ì‹œ Pod ìë™ ì •ë¦¬
+# 2) ³×ÀÓ½ºÆäÀÌ½º
+kubectl create namespace monitoring
 
-2. **ServiceMonitor**: Prometheusê°€ ëª¨ë“  node-exporter Serviceë¥¼ ìë™ ê°ì§€
-   - í•˜ë‚˜ì˜ ServiceMonitorë¡œ ëª¨ë“  node-exporter ìë™ ìŠ¤í¬ë©
-   - ë…¸ë“œë³„ ServiceMonitor ìƒì„± ë¶ˆí•„ìš”
+# 3) Slack À¥ÈÅ Secret
+kubectl -n monitoring create secret generic slack-webhook --from-literal=api_url='https://hooks.slack.com/services/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'
 
-## ì „ì œ ì¡°ê±´
+# 4) Prometheus/Alertmanager ¹èÆ÷
+helm upgrade --install prometheus charts/prometheus-stack -n monitoring -f charts/prometheus-stack/values.yaml
 
-- ë¡œì»¬ Kubernetes í´ëŸ¬ìŠ¤í„° ì‹¤í–‰ ì¤‘ (minikube, kind, k3s ë“±)
-- `kubectl` ì„¤ì¹˜ ë° í´ëŸ¬ìŠ¤í„° ì ‘ê·¼ ê°€ëŠ¥
-- `helm` v3.12+ ì„¤ì¹˜
-- ìµœì†Œ 2GB RAM, 2 CPU ì½”ì–´ ì‚¬ìš© ê°€ëŠ¥
+# 5) Alertmanager UI Æ÷Æ®Æ÷¿öµå(Ã¢ À¯Áö)
+kubectl -n monitoring port-forward svc/alertmanager 9093:9093
+```
+Alertmanager UI: http://localhost:9093
 
-## ë¹ ë¥¸ ì‹œì‘
-
-### ì„¤ì¹˜
-
-```bash
-# ì €ì¥ì†Œ í´ë¡ 
-git clone <repository-url>
-cd promethus-example
-
-# ì„¤ì¹˜ ìŠ¤í¬ë¦½íŠ¸ ì‹¤í–‰
-./scripts/install.sh
+### Å×½ºÆ® ¾Ë¶÷ º¸³»±â
+```powershell
+curl -XPOST -H "Content-Type: application/json" http://localhost:9093/api/v1/alerts -d "[{`"labels`":{`"alertname`":`"TestAlert`",`"severity`":`"warning`",`"instance`":`"test.local`",`"namespace`":`"default`",`"pod`":`"demo-123`"},`"annotations`":{`"summary`":`"Test summary`",`"description`":`"This is a test alert to Slack`"}}]"
 ```
 
-### ì ‘ê·¼
-
-```bash
-# Grafana ì ‘ê·¼
-kubectl port-forward -n monitoring svc/grafana 3000:80
-# ë¸Œë¼ìš°ì €ì—ì„œ http://localhost:3000 ì ‘ê·¼
-# ê¸°ë³¸ ì‚¬ìš©ì: admin, ë¹„ë°€ë²ˆí˜¸: prom-operator
-
-# Prometheus ì ‘ê·¼
-kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 9090:9090
-# ë¸Œë¼ìš°ì €ì—ì„œ http://localhost:9090 ì ‘ê·¼
-```
-
-## í”„ë¡œì íŠ¸ êµ¬ì¡°
-
-```
-.
-â”œâ”€â”€ charts/                    # Helm Chart values
-â”‚   â”œâ”€â”€ prometheus-stack/
-â”‚   â””â”€â”€ grafana/
-â”œâ”€â”€ configs/                   # Kubernetes ë¦¬ì†ŒìŠ¤ YAML
-â”‚   â”œâ”€â”€ prometheus/
-â”‚   â”‚   â”œâ”€â”€ alert-rules.yaml
-â”‚   â”‚   â””â”€â”€ servicemonitor.yaml
-â”‚   â”œâ”€â”€ node-exporter/
-â”‚   â”‚   â”œâ”€â”€ daemonset.yaml
-â”‚   â”‚   â””â”€â”€ service.yaml
-â”‚   â””â”€â”€ grafana/
-â”‚       â””â”€â”€ dashboards/
-â”œâ”€â”€ scripts/                   # ì„¤ì¹˜/ë°°í¬ ìŠ¤í¬ë¦½íŠ¸
-â”‚   â”œâ”€â”€ install.sh
-â”‚   â””â”€â”€ uninstall.sh
-â””â”€â”€ specs/                     # ê¸°ëŠ¥ ìŠ¤í™ ë° ë¬¸ì„œ
-    â””â”€â”€ 001-k8s-auto-monitoring/
-```
-
-## ì‘ë™ ì›ë¦¬
-
-### ìë™ ë…¸ë“œ ê°ì§€ ë° ëª¨ë‹ˆí„°ë§
-
-1. **DaemonSet ë°°í¬**: `node-exporter` DaemonSetì„ ë°°í¬í•˜ë©´ ëª¨ë“  ë…¸ë“œì— ìë™ìœ¼ë¡œ Podê°€ ìƒì„±ë©ë‹ˆë‹¤.
-2. **Service ìƒì„±**: node-exporter Serviceê°€ ìƒì„±ë˜ì–´ ëª¨ë“  Podì˜ ì—”ë“œí¬ì¸íŠ¸ë¥¼ ë…¸ì¶œí•©ë‹ˆë‹¤.
-3. **ServiceMonitor ìƒì„±**: í•˜ë‚˜ì˜ ServiceMonitorê°€ ëª¨ë“  node-exporter Serviceë¥¼ ìë™ìœ¼ë¡œ ê°ì§€í•©ë‹ˆë‹¤.
-4. **Prometheus ìŠ¤í¬ë©**: Prometheus Operatorê°€ ServiceMonitorë¥¼ ê°ì§€í•˜ê³  ìë™ìœ¼ë¡œ ë©”íŠ¸ë¦­ì„ ìˆ˜ì§‘í•©ë‹ˆë‹¤.
-
-**ìƒˆ ë…¸ë“œ ì¶”ê°€ ì‹œ**:
-- DaemonSetì´ ìë™ìœ¼ë¡œ ìƒˆ ë…¸ë“œì— node-exporter Pod ìƒì„±
-- Serviceê°€ ìë™ìœ¼ë¡œ ìƒˆ Podë¥¼ ì—”ë“œí¬ì¸íŠ¸ì— ì¶”ê°€
-- Prometheusê°€ ìë™ìœ¼ë¡œ ìƒˆ ì—”ë“œí¬ì¸íŠ¸ë¥¼ ìŠ¤í¬ë© ì‹œì‘
-- **ì¶”ê°€ ì‘ì—… ë¶ˆí•„ìš”!**
-
-## ì œê±°
-
-```bash
-./scripts/uninstall.sh
-```
-
-ë˜ëŠ” ìˆ˜ë™ìœ¼ë¡œ:
-
-```bash
+### Á¤¸®
+```powershell
 helm uninstall prometheus -n monitoring
-helm uninstall grafana -n monitoring
-kubectl delete -f configs/node-exporter/
-kubectl delete -f configs/prometheus/servicemonitor.yaml
 kubectl delete namespace monitoring
+kind delete cluster
 ```
 
-## ì°¸ê³  ìë£Œ
+## ÆÄÀÏ ¸Ê
+```
+charts/prometheus-stack/values.yaml   # Prometheus/Alertmanager ¼³Á¤ + Slack ¼ö½ÅÀÚ
+configs/prometheus/alert-rules.yaml   # ³ëµå ¾Ë¸² ±ÔÄ¢(30s Æò°¡, 5m Áö¼Ó)
+configs/prometheus/servicemonitor.yaml# node-exporter ½ºÅ©·¹ÀÌÇÁ 30s
+configs/node-exporter/daemonset.yaml  # node-exporter DaemonSet
+configs/node-exporter/service.yaml    # node-exporter Service
+scripts/install.sh, scripts/uninstall.sh
+specs/, tests/                       # »ç¾ç/Å×½ºÆ® ¹®¼­
+```
 
-- [Prometheus ë¬¸ì„œ](https://prometheus.io/docs/)
-- [Grafana ë¬¸ì„œ](https://grafana.com/docs/)
-- [Kubernetes DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
-- [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator)
-
+## Æ®·¯ºí½´ÆÃ
+- Slack Æ÷¸ËÀÌ ¾È ¹Ù²ğ ¶§: ÃÖ½Å `values.yaml`·Î Helm Àç¹èÆ÷ ÈÄ Alertmanager StatefulSet Àç½ÃÀÛ.
+- À¥ÈÅ ±³Ã¼: Secret `slack-webhook`ÀÇ `api_url`¸¸ °»½ÅÇÏ¸é Àç¹èÆ÷ ¾øÀÌ ¹İ¿µ.
