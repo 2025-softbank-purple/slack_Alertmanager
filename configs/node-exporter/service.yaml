@@ -4,10 +4,10 @@ metadata:
   name: node-exporter
   namespace: monitoring
   labels:
-    k8s-app: node-exporter
+    app: node-exporter
 spec:
   selector:
-    k8s-app: node-exporter
+    app: node-exporter
   ports:
     - name: metrics
       protocol: TCP

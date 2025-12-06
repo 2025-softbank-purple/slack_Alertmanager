@@ -22,6 +22,7 @@ data:
           - "alertmanager.monitoring.svc:9093"
 
     scrape_configs:
+      # 1. Kubernetes API Server (오직 default/kubernetes만 타겟)
       - job_name: 'kubernetes-apiservers'
         scheme: https
         kubernetes_sd_configs:
@@ -30,26 +31,42 @@ data:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         relabel_configs:
-        - source_labels:
-          - __meta_kubernetes_namespace
-          - __meta_kubernetes_service_name
-          - __meta_kubernetes_endpoint_port_name
-          action: keep
-          regex: default;kubernetes;https
+        - action: keep
+          source_labels:
+            - __meta_kubernetes_namespace
+            - __meta_kubernetes_service_name
+          regex: default;kubernetes
 
-      # 2. Node Exporter (★ 추가)
+      # 2. Node Exporter (각 노드의 pod별 메트릭 수집 - DaemonSet 자동 발견)
       - job_name: 'node-exporter'
-        static_configs:
-        - targets:
-          - 'node-exporter.monitoring.svc.cluster.local:9100'
+        kubernetes_sd_configs:
+        - role: endpoints
+        relabel_configs:
+        # monitoring 네임스페이스의 node-exporter 서비스만 선택
+        - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name]
+          action: keep
+          regex: monitoring;node-exporter
+        # metrics 포트만 선택
+        - source_labels: [__meta_kubernetes_endpoint_port_name]
+          action: keep
+          regex: metrics
+        # 라벨 추가
+        - action: labelmap
+          regex: __meta_kubernetes_pod_label_(.+)
+        - source_labels: [__meta_kubernetes_pod_name]
+          action: replace
+          target_label: kubernetes_pod_name
+        - source_labels: [__meta_kubernetes_node_name]
+          action: replace
+          target_label: kubernetes_node_name
 
-      # 3. kube-state-metrics
+      # 3. kube-state-metrics (Kubernetes 리소스 메트릭)
       - job_name: 'kube-state-metrics'
         static_configs:
         - targets:
           - 'kube-state-metrics.kube-system.svc.cluster.local:8080'
 
-      # 4. Kubernetes Nodes
+      # 4. Kubernetes Nodes (노드 레벨 메트릭)
       - job_name: 'kubernetes-nodes'
         scheme: https
         kubernetes_sd_configs:
@@ -67,7 +84,7 @@ data:
           target_label: __metrics_path__
           replacement: /api/v1/nodes/${1}/proxy/metrics
 
-      # 5. Kubernetes Pods
+      # 5. Kubernetes Pods (자동 발견 - prometheus.io/scrape=true 어노테이션 필요)
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
         - role: pod
@@ -93,7 +110,7 @@ data:
           action: replace
           target_label: kubernetes_pod_name
 
-      # 6. Cadvisor
+      # 6. Cadvisor (컨테이너 메트릭 - 각 노드의 cAdvisor)
       - job_name: 'kubernetes-cadvisor'
         scheme: https
         kubernetes_sd_configs:
