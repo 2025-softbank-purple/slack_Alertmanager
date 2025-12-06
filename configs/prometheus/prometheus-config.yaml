@@ -127,23 +127,29 @@ data:
           target_label: __metrics_path__
           replacement: /api/v1/nodes/${1}/proxy/metrics
 
-      # 5. Kubernetes Pods (자동 발견 - prometheus.io/scrape=true 어노테이션 필요)
+      # 5. Kubernetes Pods (모든 실행 중인 Pod 자동 추적)
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
         - role: pod
         relabel_configs:
-        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        # 실행 중인 Pod만 선택 (Completed, Error, Pending 제외)
+        - source_labels: [__meta_kubernetes_pod_phase]
           action: keep
-          regex: true
+          regex: Running
+        # 모든 실행 중인 Pod 추적 (어노테이션 필터 제거)
+        # 메트릭 경로 설정 (어노테이션이 있으면 사용, 없으면 기본값 /metrics)
         - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
           action: replace
           target_label: __metrics_path__
           regex: (.+)
+          replacement: ${1}
+        # 포트 설정 (어노테이션이 있으면 사용, 없으면 Pod IP의 기본 포트 사용)
         - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
           action: replace
           regex: ([^:]+)(?::\d+)?;(\d+)
           replacement: $1:$2
           target_label: __address__
+        # 라벨 추가
         - action: labelmap
           regex: __meta_kubernetes_pod_label_(.+)
         - source_labels: [__meta_kubernetes_namespace]
@@ -152,6 +158,15 @@ data:
         - source_labels: [__meta_kubernetes_pod_name]
           action: replace
           target_label: kubernetes_pod_name
+        - source_labels: [__meta_kubernetes_pod_node_name]
+          action: replace
+          target_label: kubernetes_node_name
+        - source_labels: [__meta_kubernetes_pod_controller_kind]
+          action: replace
+          target_label: kubernetes_pod_controller_kind
+        - source_labels: [__meta_kubernetes_pod_controller_name]
+          action: replace
+          target_label: kubernetes_pod_controller_name
 
       # 6. Cadvisor (컨테이너 메트릭 - 각 노드의 cAdvisor)
       - job_name: 'kubernetes-cadvisor'
