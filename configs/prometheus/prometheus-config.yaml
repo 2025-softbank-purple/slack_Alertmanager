@@ -40,16 +40,21 @@ data:
       # 2. Node Exporter (각 노드의 pod별 메트릭 수집 - DaemonSet 자동 발견)
       - job_name: 'node-exporter'
         kubernetes_sd_configs:
-        - role: endpoints
+        - role: pod
         relabel_configs:
-        # monitoring 네임스페이스의 node-exporter 서비스만 선택
-        - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name]
+        # monitoring 네임스페이스의 node-exporter Pod만 선택
+        - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_label_app]
           action: keep
           regex: monitoring;node-exporter
-        # metrics 포트만 선택
-        - source_labels: [__meta_kubernetes_endpoint_port_name]
+        # metrics 포트만 선택 (containerPort 이름)
+        - source_labels: [__meta_kubernetes_pod_container_port_name]
           action: keep
           regex: metrics
+        # Pod IP와 포트를 주소로 설정
+        - source_labels: [__meta_kubernetes_pod_ip]
+          action: replace
+          target_label: __address__
+          replacement: $1:9100
         # 라벨 추가
         - action: labelmap
           regex: __meta_kubernetes_pod_label_(.+)
