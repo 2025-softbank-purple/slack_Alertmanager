@@ -39,6 +39,7 @@ data:
 
       # 2. Node Exporter (각 노드의 pod별 메트릭 수집 - DaemonSet 자동 발견)
       - job_name: 'node-exporter'
+        scheme: http
         kubernetes_sd_configs:
         - role: pod
         relabel_configs:
