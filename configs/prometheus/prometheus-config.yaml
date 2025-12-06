@@ -42,8 +42,8 @@ data:
         kubernetes_sd_configs:
         - role: pod
         relabel_configs:
-        # monitoring 네임스페이스의 node-exporter Pod만 선택
-        - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_label_app]
+        # monitoring 네임스페이스의 node-exporter Pod만 선택 (k8s-app label 사용)
+        - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_label_k8s_app]
           action: keep
           regex: monitoring;node-exporter
         # metrics 포트만 선택 (containerPort 이름)
