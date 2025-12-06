@@ -80,12 +80,25 @@ data:
           action: replace
           target_label: __address__
           replacement: $1:9100
+        # Pod별로 고유한 instance 라벨 생성 (Pod 이름 기반)
+        - source_labels: [__meta_kubernetes_pod_name]
+          action: replace
+          target_label: instance
+          replacement: $1:9100
         # 라벨 추가
         - action: labelmap
           regex: __meta_kubernetes_pod_label_(.+)
+        # Pod 정보 라벨 추가
         - source_labels: [__meta_kubernetes_pod_name]
           action: replace
           target_label: kubernetes_pod_name
+        - source_labels: [__meta_kubernetes_pod_namespace]
+          action: replace
+          target_label: kubernetes_namespace
+        - source_labels: [__meta_kubernetes_pod_uid]
+          action: replace
+          target_label: kubernetes_pod_uid
+        # 노드 정보는 라벨로만 유지 (단일 노드 정보)
         - source_labels: [__meta_kubernetes_node_name]
           action: replace
           target_label: kubernetes_node_name
