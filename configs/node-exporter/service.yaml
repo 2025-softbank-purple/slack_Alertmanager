@@ -4,14 +4,12 @@ metadata:
   name: node-exporter
   namespace: monitoring
   labels:
-    app: node-exporter
+    k8s-app: node-exporter
 spec:
   selector:
-    app: node-exporter
+    k8s-app: node-exporter
   ports:
     - name: metrics
+      protocol: TCP
       port: 9100
       targetPort: 9100
-      protocol: TCP
-  clusterIP: None  # Headless service for DaemonSet
-
