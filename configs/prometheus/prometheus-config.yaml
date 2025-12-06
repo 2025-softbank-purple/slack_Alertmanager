@@ -1,58 +1,106 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: prometheus-server-conf
-  namespace: monitoring
-  labels:
-    name: prometheus-server-conf
-data:
-  prometheus.rules: |-
-    groups:
-    - name: container memory alert
-      rules:
-      - alert: container memory usage rate is very high( > 55%)
-        expr: sum(container_memory_working_set_bytes{pod!=""}) / sum(kube_node_status_allocatable_memory_bytes) * 100 > 55
-        for: 1m
-        labels:
-          severity: fatal
-        annotations:
-          summary: High Memory Usage on {{ $labels.instance }}
-          description: "{{ $labels.job }} Memory Usage: {{ $value }}"
+prometheus.yml: |-
+  global:
+    scrape_interval: 5s
+    evaluation_interval: 5s
 
-    - name: container CPU alert
-      rules:
-      - alert: container CPU usage rate is very high( > 10%)
-        expr: sum(rate(container_cpu_usage_seconds_total{pod!=""}[1m])) / sum(machine_cpu_cores) * 100 > 10
-        for: 1m
-        labels:
-          severity: fatal
-        annotations:
-          summary: High CPU Usage
-          description: "{{ $labels.job }} CPU Usage: {{ $value }}"
+  rule_files:
+    - /etc/prometheus/prometheus.rules
 
-  prometheus.yml: |-
-    global:
-      scrape_interval: 5s
-      evaluation_interval: 5s
+  alerting:
+    alertmanagers:
+    - scheme: http
+      static_configs:
+      - targets:
+        - "alertmanager.monitoring.svc:9093"
 
-    rule_files:
-      - /etc/prometheus/prometheus.rules
+  scrape_configs:
 
-    alerting:
-      alertmanagers:
-      - scheme: http
-        static_configs:
-        - targets:
-          - "alertmanager.monitoring.svc:9093"
+    # 1. Kubernetes API Server (정상 버전)
+    - job_name: 'kubernetes-apiservers'
+      scheme: https
+      kubernetes_sd_configs:
+      - role: endpoints
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - source_labels:
+        - __meta_kubernetes_namespace
+        - __meta_kubernetes_service_name
+        - __meta_kubernetes_endpoint_port_name
+        action: keep
+        regex: default;kubernetes;https
 
-    scrape_configs:
+    # 2. Node Exporter (★ 추가)
+    - job_name: 'node-exporter'
+      static_configs:
+      - targets:
+        - 'node-exporter.monitoring.svc.cluster.local:9100'
 
-      # 1. Kubernetes API 서버
-      - job_name: 'kubernetes-apiservers'
-        scheme: https
-        kubernetes_sd_configs:
-        - role: endpoints
-        tls_config:
-          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-        relabel_configs:
+    # 3. kube-state-metrics
+    - job_name: 'kube-state-metrics'
+      static_configs:
+      - targets:
+        - 'kube-state-metrics.kube-system.svc.cluster.local:8080'
+
+    # 4. Kubernetes Nodes
+    - job_name: 'kubernetes-nodes'
+      scheme: https
+      kubernetes_sd_configs:
+      - role: node
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics
+
+    # 5. Kubernetes Pods
+    - job_name: 'kubernetes-pods'
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+
+    # 6. Cadvisor
+    - job_name: 'kubernetes-cadvisor'
+      scheme: https
+      kubernetes_sd_configs:
+      - role: node
+      tls_config:
+        ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
