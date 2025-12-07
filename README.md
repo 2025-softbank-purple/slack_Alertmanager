@@ -1,70 +1,70 @@
-# Kubernetes ¸ð´ÏÅÍ¸µ + Slack Alertmanager
+# Kubernetes ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ + Slack Alertmanager
 
-Prometheus Operator(kube-prometheus-stack)¿Í Alertmanager¸¦ ¹èÆ÷ÇØ ³ëµå ¸ÞÆ®¸¯À» ¼öÁýÇÏ°í, Slack À¥ÈÅÀ¸·Î ¾Ë¸²À» º¸³»´Â ¿¹Á¦ÀÔ´Ï´Ù. node-exporter·Î ³ëµå »óÅÂ¸¦ ¼öÁýÇÏ¸ç, ¾Ë¸²Àº Secret·Î ÁÖÀÔÇÑ Slack À¥ÈÅ URLÀ» »ç¿ëÇÕ´Ï´Ù.
+Prometheus Operator(kube-prometheus-stack)ï¿½ï¿½ Alertmanagerï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½, Slack ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½. node-exporterï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½, ï¿½Ë¸ï¿½ï¿½ï¿½ Secretï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Slack ï¿½ï¿½ï¿½ï¿½ URLï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
 
-## ±¸¼º
-- Helm °ª ÆÄÀÏ: `charts/prometheus-stack/values.yaml` (Alertmanager Slack ¼³Á¤ Æ÷ÇÔ)
-- °æº¸ ±ÔÄ¢ ¹× ServiceMonitor: `configs/prometheus/`
+## ï¿½ï¿½ï¿½ï¿½
+- Helm ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: `charts/prometheus-stack/values.yaml` (Alertmanager Slack ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
+- ï¿½æº¸ ï¿½ï¿½Ä¢ ï¿½ï¿½ ServiceMonitor: `configs/prometheus/`
 - node-exporter DaemonSet/Service: `configs/node-exporter/`
-- ¼³Ä¡/Á¦°Å ½ºÅ©¸³Æ®: `scripts/`
-- ¸í¼¼/Å×½ºÆ® ¹®¼­: `specs/`, `tests/`
+- ï¿½ï¿½Ä¡/ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½Æ®: `scripts/`
+- ï¿½ï¿½ï¿½ï¿½/ï¿½×½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½: `specs/`, `tests/`
 
-## Alertmanager ¡æ Slack Æ÷¸Ë
-- Slack À¥ÈÅ URL: Secret `slack-webhook`ÀÇ Å° `api_url`
-- Alertmanager°¡ `/etc/alertmanager/secrets/slack-webhook/api_url`¿¡¼­ URLÀ» ÀÐÀ½
-- Á¦¸ñ: `[STATUS] alertname (severity)`
-- º»¹®:
+## Alertmanager ï¿½ï¿½ Slack ï¿½ï¿½ï¿½ï¿½
+- Slack ï¿½ï¿½ï¿½ï¿½ URL: Secret `slack-webhook`ï¿½ï¿½ Å° `api_url`
+- Alertmanagerï¿½ï¿½ `/etc/alertmanager/secrets/slack-webhook/api_url`ï¿½ï¿½ï¿½ï¿½ URLï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+- ï¿½ï¿½ï¿½ï¿½: `[STATUS] alertname (severity)`
+- ï¿½ï¿½ï¿½ï¿½:
   - `*Where*: ns=<namespace>, pod=<pod>, instance=<instance>`
   - `*What*: <summary>`
-  - `*Detail*: <description>` (ÁÖ¼®ÀÌ ÀÖÀ» ¶§¸¸)
+  - `*Detail*: <description>` (ï¿½Ö¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
 
-## ¼±Çà Á¶°Ç
-- Docker Desktop ½ÇÇà Áß(WSL2 ¿£Áø ±ÇÀå)
-- kind ¼³Ä¡ ¹× PATH µî·Ï (`kind --version` µ¿ÀÛ)
-- kubectl, Helm v3 ¼³Ä¡
+## ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+- Docker Desktop ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½(WSL2 ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
+- kind ï¿½ï¿½Ä¡ ï¿½ï¿½ PATH ï¿½ï¿½ï¿½ (`kind --version` ï¿½ï¿½ï¿½ï¿½)
+- kubectl, Helm v3 ï¿½ï¿½Ä¡
 
-## ·ÎÄÃ ½ÇÇà(Windows PowerShell)
+## ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(Windows PowerShell)
 ```powershell
-# 1) kind Å¬·¯½ºÅÍ »ý¼º
+# 1) kind Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 kind create cluster --config kind-multi-node.yaml
 
-# 2) ³×ÀÓ½ºÆäÀÌ½º
+# 2) ï¿½ï¿½ï¿½Ó½ï¿½ï¿½ï¿½ï¿½Ì½ï¿½
 kubectl create namespace monitoring
 
-# 3) Slack À¥ÈÅ Secret
-kubectl -n monitoring create secret generic slack-webhook --from-literal=api_url='https://hooks.slack.com/services/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'
+# 3) Slack ï¿½ï¿½ï¿½ï¿½ Secret
+kubectl -n monitoring create secret generic slack-webhook --from-literal=api_url='YOUR_SLACK_WEBHOOK_URL_HERE'
 
-# 4) Prometheus/Alertmanager ¹èÆ÷
+# 4) Prometheus/Alertmanager ï¿½ï¿½ï¿½ï¿½
 helm upgrade --install prometheus charts/prometheus-stack -n monitoring -f charts/prometheus-stack/values.yaml
 
-# 5) Alertmanager UI Æ÷Æ®Æ÷¿öµå(Ã¢ À¯Áö)
+# 5) Alertmanager UI ï¿½ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(Ã¢ ï¿½ï¿½ï¿½ï¿½)
 kubectl -n monitoring port-forward svc/alertmanager 9093:9093
 ```
 Alertmanager UI: http://localhost:9093
 
-### Å×½ºÆ® ¾Ë¶÷ º¸³»±â
+### ï¿½×½ï¿½Æ® ï¿½Ë¶ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 ```powershell
 curl -XPOST -H "Content-Type: application/json" http://localhost:9093/api/v1/alerts -d "[{`"labels`":{`"alertname`":`"TestAlert`",`"severity`":`"warning`",`"instance`":`"test.local`",`"namespace`":`"default`",`"pod`":`"demo-123`"},`"annotations`":{`"summary`":`"Test summary`",`"description`":`"This is a test alert to Slack`"}}]"
 ```
 
-### Á¤¸®
+### ï¿½ï¿½ï¿½ï¿½
 ```powershell
 helm uninstall prometheus -n monitoring
 kubectl delete namespace monitoring
 kind delete cluster
 ```
 
-## ÆÄÀÏ ¸Ê
+## ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
 ```
-charts/prometheus-stack/values.yaml   # Prometheus/Alertmanager ¼³Á¤ + Slack ¼ö½ÅÀÚ
-configs/prometheus/alert-rules.yaml   # ³ëµå ¾Ë¸² ±ÔÄ¢(30s Æò°¡, 5m Áö¼Ó)
-configs/prometheus/servicemonitor.yaml# node-exporter ½ºÅ©·¹ÀÌÇÁ 30s
+charts/prometheus-stack/values.yaml   # Prometheus/Alertmanager ï¿½ï¿½ï¿½ï¿½ + Slack ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+configs/prometheus/alert-rules.yaml   # ï¿½ï¿½ï¿½ ï¿½Ë¸ï¿½ ï¿½ï¿½Ä¢(30s ï¿½ï¿½, 5m ï¿½ï¿½ï¿½ï¿½)
+configs/prometheus/servicemonitor.yaml# node-exporter ï¿½ï¿½Å©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 30s
 configs/node-exporter/daemonset.yaml  # node-exporter DaemonSet
 configs/node-exporter/service.yaml    # node-exporter Service
 scripts/install.sh, scripts/uninstall.sh
-specs/, tests/                       # »ç¾ç/Å×½ºÆ® ¹®¼­
+specs/, tests/                       # ï¿½ï¿½ï¿½/ï¿½×½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
 ```
 
-## Æ®·¯ºí½´ÆÃ
-- Slack Æ÷¸ËÀÌ ¾È ¹Ù²ð ¶§: ÃÖ½Å `values.yaml`·Î Helm Àç¹èÆ÷ ÈÄ Alertmanager StatefulSet Àç½ÃÀÛ.
-- À¥ÈÅ ±³Ã¼: Secret `slack-webhook`ÀÇ `api_url`¸¸ °»½ÅÇÏ¸é Àç¹èÆ÷ ¾øÀÌ ¹Ý¿µ.
+## Æ®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+- Slack ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù²ï¿½ ï¿½ï¿½: ï¿½Ö½ï¿½ `values.yaml`ï¿½ï¿½ Helm ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Alertmanager StatefulSet ï¿½ï¿½ï¿½ï¿½ï¿½.
+- ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼: Secret `slack-webhook`ï¿½ï¿½ `api_url`ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ý¿ï¿½.
