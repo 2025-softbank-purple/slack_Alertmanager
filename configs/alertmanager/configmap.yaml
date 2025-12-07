@@ -21,8 +21,10 @@ data:
         title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}{{ if .CommonLabels.severity }} ({{ .CommonLabels.severity }}){{ else }} (info){{ end }}'
         text: |
           *Where*: ns={{ if .CommonLabels.namespace }}{{ .CommonLabels.namespace }}{{ else }}n/a{{ end }}, pod={{ if .CommonLabels.pod }}{{ .CommonLabels.pod }}{{ else }}n/a{{ end }}, instance={{ if .CommonLabels.instance }}{{ .CommonLabels.instance }}{{ else }}n/a{{ end }}
+          {{- range .Alerts }}
           *What*: {{ .Annotations.summary }}
           {{- if .Annotations.description }}
           *Detail*: {{ .Annotations.description }}
+          {{- end }}
           {{- end }}
 
