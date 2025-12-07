@@ -18,9 +18,9 @@ data:
       slack_configs:
       - api_url_file: /etc/alertmanager/secrets/slack-webhook/api_url
         send_resolved: true
-        title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }} ({{ .CommonLabels.severity | default "info" }})'
+        title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}{{ if .CommonLabels.severity }} ({{ .CommonLabels.severity }}){{ else }} (info){{ end }}'
         text: |
-          *Where*: ns={{ .CommonLabels.namespace | default "n/a" }}, pod={{ .CommonLabels.pod | default "n/a" }}, instance={{ .CommonLabels.instance | default "n/a" }}
+          *Where*: ns={{ if .CommonLabels.namespace }}{{ .CommonLabels.namespace }}{{ else }}n/a{{ end }}, pod={{ if .CommonLabels.pod }}{{ .CommonLabels.pod }}{{ else }}n/a{{ end }}, instance={{ if .CommonLabels.instance }}{{ .CommonLabels.instance }}{{ else }}n/a{{ end }}
           *What*: {{ .Annotations.summary }}
           {{- if .Annotations.description }}
           *Detail*: {{ .Annotations.description }}
